@@ -1,0 +1,29 @@
+- name: Deploy Laravel application on slave VM
+  hosts: slave
+  become: true
+  tasks:
+    - name: Add remote host to known_hosts
+      known_hosts:
+        path: /home/vagrant/.ssh/known_hosts
+        name: 192.168.56.5
+        key: "{{ lookup('pipe', 'ssh-keyscan -H 192.168.56.5') }}"
+
+
+    - name: Copy LAMP setup script
+      copy:
+        src: ./lamp.sh
+        dest: /home/vagrant/lamp.sh
+        mode: '0755'
+        owner: vagrant
+        group: vagrant
+
+    - name: Run the LAMP setup script on Slave
+      command: /home/vagrant/lamp.sh
+
+
+    - name: Set up cron job
+      cron:
+        name: "Log server uptime"
+        minute: "0"
+        hour: "0"
+        job: "/usr/bin/uptime >> /var/log/uptime.log"
